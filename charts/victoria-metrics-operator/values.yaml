@@ -7,6 +7,7 @@ global:
 # Default values for victoria-metrics.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+# -- operator image configuration
 image:
   # -- Image registry
   registry: ""
@@ -107,8 +108,7 @@ service:
   ipFamilyPolicy: ""
   ipFamilies: []
 
-## See `kubectl explain poddisruptionbudget.spec` for more
-## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+## -- See `kubectl explain poddisruptionbudget.spec` for more or check [these docs](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)
 podDisruptionBudget:
   enabled: false
   # minAvailable: 1
@@ -125,22 +125,22 @@ resources:
   #   cpu: 80m
   #   memory: 120Mi
 
-# -- Pod's node selector. Ref: [https://kubernetes.io/docs/user-guide/node-selection/](https://kubernetes.io/docs/user-guide/node-selection/
+# -- Pod's node selector. Details are [here](https://kubernetes.io/docs/user-guide/node-selection/)
 nodeSelector: {}
 
-# -- Array of tolerations object. Ref: [https://kubernetes.io/docs/concepts/configuration/assign-pod-node/](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)
+# -- Array of tolerations object. Spec is [here](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/)
 tolerations: []
 
 # -- Pod affinity
 affinity: {}
 
-# -- Pod Topology Spread Constraints. Ref: [https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/)
+# -- Pod Topology Spread Constraints. Spec is [here](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/)
 topologySpreadConstraints: []
 
 # -- operator container additional commandline arguments
 extraArgs: {}
 
-# -- extra settings for the operator deployment. full list Ref: [https://github.com/VictoriaMetrics/operator/blob/master/vars.MD](https://github.com/VictoriaMetrics/operator/blob/master/vars.MD)
+# -- extra settings for the operator deployment. Full list [here](https://docs.victoriametrics.com/operator/vars)
 env:
   []
   # - name: VM_VMSINGLEDEFAULT_VERSION
@@ -223,7 +223,7 @@ serviceMonitor:
   basicAuth: {}
 
 probe:
-  # Readiness probe
+  # -- Readiness probe
   readiness:
     httpGet:
       path: '{{ include "vm.probe.http.path" . }}'
@@ -233,7 +233,7 @@ probe:
     periodSeconds: 15
     timeoutSeconds: 5
     failureThreshold: 3
-  # Liveness probe
+  # -- Liveness probe
   liveness:
     tcpSocket:
       port: probe
@@ -241,7 +241,7 @@ probe:
     periodSeconds: 15
     timeoutSeconds: 5
     failureThreshold: 3
-  # Startup probe
+  # -- Startup probe
   startup: {}
 
 # -- Add extra specs dynamically to this chart

@@ -195,6 +195,25 @@ The following tables lists the configurable parameters of the chart and their de
 
 Change the values according to the need of the environment in ``victoria-metrics-distributed`/values.yaml`` file.
 
-{{ template "chart.valuesTable" . }}
+{{ define "chart.valueDefaultColumnRender" }}
+{{- $defaultValue := (default .Default .AutoDefault)  -}}
+{{- $notationType := .NotationType }}
+{{- if and (hasPrefix "`" $defaultValue) (hasSuffix "`" $defaultValue) -}}
+{{- $defaultValue = (toYaml (fromJson (trimAll "`" (default .Default .AutoDefault) ) ) ) -}}
+{{- if has .Type (list "list" "object" "map") -}}
+{{- $notationType = "plaintext" }}
+{{- end -}}
+{{- end -}}
+<pre lang="{{ $notationType }}">
+{{- if (eq $notationType "tpl" ) }}
+{{ .Key }}: |
+{{- $defaultValue | nindent 2 }}
+{{- else }}
+{{ $defaultValue }}
+{{- end }}
+</pre>
+{{ end }}
+
+{{ template "chart.valuesTableHtml" . }}
 
 {{define "twospaces"}}  {{end}}

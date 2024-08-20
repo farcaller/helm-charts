@@ -195,30 +195,414 @@ The following tables lists the configurable parameters of the chart and their de
 
 Change the values according to the need of the environment in ``victoria-metrics-distributed`/values.yaml`` file.
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| availabilityZones | list | `[{"allowIngest":true,"allowQuery":true,"extraAffinity":{},"name":"zone-eu-1","nodeSelector":{"topology.kubernetes.io/zone":"zone-eu-1"},"topologySpreadConstraints":[{"maxSkew":1,"topologyKey":"kubernetes.io/hostname","whenUnsatisfiable":"ScheduleAnyway"}],"vmagent":{"annotations":{},"enabled":true,"name":"","spec":{}},"vmauthCrossAZQuery":{"enabled":true,"name":"","spec":{}},"vmauthIngest":{"enabled":true,"name":"","spec":{"extraArgs":{"discoverBackendIPs":"true"}}},"vmauthQueryPerZone":{"enabled":true,"name":"","spec":{"extraArgs":{"discoverBackendIPs":"true"}}},"vmcluster":{"enabled":true,"name":"","spec":{"replicationFactor":2,"retentionPeriod":"14","vminsert":{"extraArgs":{},"replicaCount":2,"resources":{}},"vmselect":{"extraArgs":{},"replicaCount":2,"resources":{}},"vmstorage":{"replicaCount":2,"resources":{},"storageDataPath":"/vm-data"}}}},{"allowIngest":true,"allowQuery":true,"extraAffinity":{},"name":"zone-us-1","nodeSelector":{"topology.kubernetes.io/zone":"zone-us-1"},"topologySpreadConstraints":[{"maxSkew":1,"topologyKey":"kubernetes.io/hostname","whenUnsatisfiable":"ScheduleAnyway"}],"vmagent":{"annotations":{},"enabled":true,"name":"","spec":{}},"vmauthCrossAZQuery":{"enabled":true,"name":"","spec":{}},"vmauthIngest":{"enabled":true,"name":"","spec":{"extraArgs":{"discoverBackendIPs":"true"}}},"vmauthQueryPerZone":{"enabled":true,"name":"","spec":{"extraArgs":{"discoverBackendIPs":"true"}}},"vmcluster":{"enabled":true,"name":"","spec":{"replicationFactor":2,"retentionPeriod":"14","vminsert":{"extraArgs":{},"replicaCount":2,"resources":{}},"vmselect":{"extraArgs":{},"replicaCount":2,"resources":{}},"vmstorage":{"replicaCount":2,"resources":{},"storageDataPath":"/vm-data"}}}}]` | config per availability zone components, including vmagent, vmcluster, vmauth etc |
-| availabilityZones[0].allowIngest | bool | `true` | allow data ingestion to this zone |
-| availabilityZones[0].allowQuery | bool | `true` | allow data query from this zone through global query endpoint |
-| availabilityZones[0].extraAffinity | object | `{}` | extraAffinity adds user defined custom affinity rules |
-| availabilityZones[0].nodeSelector | object | `{"topology.kubernetes.io/zone":"zone-eu-1"}` | nodeselector to restrict where pods of this zone can be placed. usually provided by cloud providers. |
-| availabilityZones[0].topologySpreadConstraints | list | `[{"maxSkew":1,"topologyKey":"kubernetes.io/hostname","whenUnsatisfiable":"ScheduleAnyway"}]` | topologySpreadConstraints allows to customize the default topologySpreadConstraints. |
-| availabilityZones[0].vmagent | object | `{"annotations":{},"enabled":true,"name":"","spec":{}}` | vmagent here only meant to proxy write requests to each az, doesn't support customized other remote write address. |
-| availabilityZones[0].vmauthCrossAZQuery | object | `{"enabled":true,"name":"","spec":{}}` | set up a vmauth with all the zone with `allowQuery: true` as query backends |
-| availabilityZones[0].vmauthIngest.name | string | `""` | override the name of the vmauth object |
-| availabilityZones[0].vmcluster.spec | object | `{"replicationFactor":2,"retentionPeriod":"14","vminsert":{"extraArgs":{},"replicaCount":2,"resources":{}},"vmselect":{"extraArgs":{},"replicaCount":2,"resources":{}},"vmstorage":{"replicaCount":2,"resources":{},"storageDataPath":"/vm-data"}}` | spec for VMCluster crd, see https://docs.victoriametrics.com/operator/api.html#vmclusterspec |
-| availabilityZones[1].allowIngest | bool | `true` | allow data ingestion to this zone |
-| availabilityZones[1].allowQuery | bool | `true` | allow data query from this zone through global query endpoint |
-| availabilityZones[1].extraAffinity | object | `{}` | extraAffinity adds user defined custom affinity rules |
-| availabilityZones[1].nodeSelector | object | `{"topology.kubernetes.io/zone":"zone-us-1"}` | nodeselector to restrict where pods of this zone can be placed. usually provided by cloud providers. |
-| availabilityZones[1].topologySpreadConstraints | list | `[{"maxSkew":1,"topologyKey":"kubernetes.io/hostname","whenUnsatisfiable":"ScheduleAnyway"}]` | topologySpreadConstraints allows to customize the default topologySpreadConstraints. |
-| availabilityZones[1].vmagent | object | `{"annotations":{},"enabled":true,"name":"","spec":{}}` | vmagent only meant to proxy write requests to each az, doesn't support customized remote write address |
-| availabilityZones[1].vmcluster.spec | object | `{"replicationFactor":2,"retentionPeriod":"14","vminsert":{"extraArgs":{},"replicaCount":2,"resources":{}},"vmselect":{"extraArgs":{},"replicaCount":2,"resources":{}},"vmstorage":{"replicaCount":2,"resources":{},"storageDataPath":"/vm-data"}}` | spec for VMCluster crd, see https://docs.victoriametrics.com/operator/api.html#vmclusterspec |
-| enableMultitenancy | bool | `false` | enable multitenancy mode see https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-distributed#how-to-use-multitenancy |
-| extraVMAgent | object | `{"enabled":true,"spec":{"selectAllByDefault":true}}` | set up an extra vmagent to scrape all the scrape objects by default, and write data to above vmauth-global-ingest endpoint. |
-| fullnameOverride | string | `""` | overrides the chart's computed fullname. |
-| nameOverride | string | `"vm-distributed"` | overrides the chart's name |
-| victoria-metrics-k8s-stack | object | `{"alertmanager":{"enabled":false},"crds":{"enabled":true},"enabled":true,"grafana":{"enabled":true,"sidecar":{"datasources":{"enabled":true}}},"victoria-metrics-operator":{"enabled":true},"vmagent":{"enabled":false},"vmalert":{"enabled":false},"vmcluster":{"enabled":false},"vmsingle":{"enabled":false}}` | set up vm operator and other resources like vmalert, grafana if needed |
-| vmauthIngestGlobal | object | `{"enabled":true,"name":"","spec":{}}` | set up a vmauth as the global write entrypoint |
-| vmauthQueryGlobal | object | `{"enabled":true,"name":"","spec":{}}` | set up a vmauth as the global read entrypoint |
+<table>
+	<thead>
+		<th>Key</th>
+		<th>Type</th>
+		<th>Default</th>
+		<th>Description</th>
+	</thead>
+	<tbody>
+		<tr>
+			<td>availabilityZones</td>
+			<td>list</td>
+			<td><pre lang="plaintext">
+- allowIngest: true
+  allowQuery: true
+  extraAffinity: {}
+  name: zone-eu-1
+  nodeSelector:
+    topology.kubernetes.io/zone: zone-eu-1
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  vmagent:
+    annotations: {}
+    enabled: true
+    name: ""
+    spec: {}
+  vmauthCrossAZQuery:
+    enabled: true
+    name: ""
+    spec: {}
+  vmauthIngest:
+    enabled: true
+    name: ""
+    spec:
+        extraArgs:
+            discoverBackendIPs: "true"
+  vmauthQueryPerZone:
+    enabled: true
+    name: ""
+    spec:
+        extraArgs:
+            discoverBackendIPs: "true"
+  vmcluster:
+    enabled: true
+    name: ""
+    spec:
+        replicationFactor: 2
+        retentionPeriod: "14"
+        vminsert:
+            extraArgs: {}
+            replicaCount: 2
+            resources: {}
+        vmselect:
+            extraArgs: {}
+            replicaCount: 2
+            resources: {}
+        vmstorage:
+            replicaCount: 2
+            resources: {}
+            storageDataPath: /vm-data
+- allowIngest: true
+  allowQuery: true
+  extraAffinity: {}
+  name: zone-us-1
+  nodeSelector:
+    topology.kubernetes.io/zone: zone-us-1
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  vmagent:
+    annotations: {}
+    enabled: true
+    name: ""
+    spec: {}
+  vmauthCrossAZQuery:
+    enabled: true
+    name: ""
+    spec: {}
+  vmauthIngest:
+    enabled: true
+    name: ""
+    spec:
+        extraArgs:
+            discoverBackendIPs: "true"
+  vmauthQueryPerZone:
+    enabled: true
+    name: ""
+    spec:
+        extraArgs:
+            discoverBackendIPs: "true"
+  vmcluster:
+    enabled: true
+    name: ""
+    spec:
+        replicationFactor: 2
+        retentionPeriod: "14"
+        vminsert:
+            extraArgs: {}
+            replicaCount: 2
+            resources: {}
+        vmselect:
+            extraArgs: {}
+            replicaCount: 2
+            resources: {}
+        vmstorage:
+            replicaCount: 2
+            resources: {}
+            storageDataPath: /vm-data
+</pre>
+</td>
+			<td><p>config per availability zone components, including vmagent, vmcluster, vmauth etc</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[0].allowIngest</td>
+			<td>bool</td>
+			<td><pre lang="">
+true
+</pre>
+</td>
+			<td><p>allow data ingestion to this zone</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[0].allowQuery</td>
+			<td>bool</td>
+			<td><pre lang="">
+true
+</pre>
+</td>
+			<td><p>allow data query from this zone through global query endpoint</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[0].extraAffinity</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+{}
+</pre>
+</td>
+			<td><p>extraAffinity adds user defined custom affinity rules</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[0].nodeSelector</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+topology.kubernetes.io/zone: zone-eu-1
+</pre>
+</td>
+			<td><p>nodeselector to restrict where pods of this zone can be placed. usually provided by cloud providers.</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[0].topologySpreadConstraints</td>
+			<td>list</td>
+			<td><pre lang="plaintext">
+- maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: ScheduleAnyway
+</pre>
+</td>
+			<td><p>topologySpreadConstraints allows to customize the default topologySpreadConstraints.</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[0].vmagent</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+annotations: {}
+enabled: true
+name: ""
+spec: {}
+</pre>
+</td>
+			<td><p>vmagent here only meant to proxy write requests to each az, doesn&rsquo;t support customized other remote write address.</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[0].vmauthCrossAZQuery</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+enabled: true
+name: ""
+spec: {}
+</pre>
+</td>
+			<td><p>set up a vmauth with all the zone with <code>allowQuery: true</code> as query backends</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[0].vmauthIngest.name</td>
+			<td>string</td>
+			<td><pre lang="">
+""
+</pre>
+</td>
+			<td><p>override the name of the vmauth object</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[0].vmcluster.spec</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+replicationFactor: 2
+retentionPeriod: "14"
+vminsert:
+    extraArgs: {}
+    replicaCount: 2
+    resources: {}
+vmselect:
+    extraArgs: {}
+    replicaCount: 2
+    resources: {}
+vmstorage:
+    replicaCount: 2
+    resources: {}
+    storageDataPath: /vm-data
+</pre>
+</td>
+			<td><p>spec for VMCluster crd, see <a href="https://docs.victoriametrics.com/operator/api.html#vmclusterspec" target="_blank">https://docs.victoriametrics.com/operator/api.html#vmclusterspec</a></p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[1].allowIngest</td>
+			<td>bool</td>
+			<td><pre lang="">
+true
+</pre>
+</td>
+			<td><p>allow data ingestion to this zone</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[1].allowQuery</td>
+			<td>bool</td>
+			<td><pre lang="">
+true
+</pre>
+</td>
+			<td><p>allow data query from this zone through global query endpoint</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[1].extraAffinity</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+{}
+</pre>
+</td>
+			<td><p>extraAffinity adds user defined custom affinity rules</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[1].nodeSelector</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+topology.kubernetes.io/zone: zone-us-1
+</pre>
+</td>
+			<td><p>nodeselector to restrict where pods of this zone can be placed. usually provided by cloud providers.</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[1].topologySpreadConstraints</td>
+			<td>list</td>
+			<td><pre lang="plaintext">
+- maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: ScheduleAnyway
+</pre>
+</td>
+			<td><p>topologySpreadConstraints allows to customize the default topologySpreadConstraints.</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[1].vmagent</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+annotations: {}
+enabled: true
+name: ""
+spec: {}
+</pre>
+</td>
+			<td><p>vmagent only meant to proxy write requests to each az, doesn&rsquo;t support customized remote write address</p>
+</td>
+		</tr>
+		<tr>
+			<td>availabilityZones[1].vmcluster.spec</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+replicationFactor: 2
+retentionPeriod: "14"
+vminsert:
+    extraArgs: {}
+    replicaCount: 2
+    resources: {}
+vmselect:
+    extraArgs: {}
+    replicaCount: 2
+    resources: {}
+vmstorage:
+    replicaCount: 2
+    resources: {}
+    storageDataPath: /vm-data
+</pre>
+</td>
+			<td><p>spec for VMCluster crd, see <a href="https://docs.victoriametrics.com/operator/api.html#vmclusterspec" target="_blank">https://docs.victoriametrics.com/operator/api.html#vmclusterspec</a></p>
+</td>
+		</tr>
+		<tr>
+			<td>enableMultitenancy</td>
+			<td>bool</td>
+			<td><pre lang="">
+false
+</pre>
+</td>
+			<td><p>enable multitenancy mode see <a href="https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-distributed#how-to-use-multitenancy" target="_blank">https://github.com/VictoriaMetrics/helm-charts/tree/master/charts/victoria-metrics-distributed#how-to-use-multitenancy</a></p>
+</td>
+		</tr>
+		<tr>
+			<td>extraVMAgent</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+enabled: true
+spec:
+    selectAllByDefault: true
+</pre>
+</td>
+			<td><p>set up an extra vmagent to scrape all the scrape objects by default, and write data to above vmauth-global-ingest endpoint.</p>
+</td>
+		</tr>
+		<tr>
+			<td>fullnameOverride</td>
+			<td>string</td>
+			<td><pre lang="">
+""
+</pre>
+</td>
+			<td><p>overrides the chart&rsquo;s computed fullname.</p>
+</td>
+		</tr>
+		<tr>
+			<td>nameOverride</td>
+			<td>string</td>
+			<td><pre lang="">
+vm-distributed
+</pre>
+</td>
+			<td><p>overrides the chart&rsquo;s name</p>
+</td>
+		</tr>
+		<tr>
+			<td>victoria-metrics-k8s-stack</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+alertmanager:
+    enabled: false
+crds:
+    enabled: true
+enabled: true
+grafana:
+    enabled: true
+    sidecar:
+        datasources:
+            enabled: true
+victoria-metrics-operator:
+    enabled: true
+vmagent:
+    enabled: false
+vmalert:
+    enabled: false
+vmcluster:
+    enabled: false
+vmsingle:
+    enabled: false
+</pre>
+</td>
+			<td><p>set up vm operator and other resources like vmalert, grafana if needed</p>
+</td>
+		</tr>
+		<tr>
+			<td>vmauthIngestGlobal</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+enabled: true
+name: ""
+spec: {}
+</pre>
+</td>
+			<td><p>set up a vmauth as the global write entrypoint</p>
+</td>
+		</tr>
+		<tr>
+			<td>vmauthQueryGlobal</td>
+			<td>object</td>
+			<td><pre lang="plaintext">
+enabled: true
+name: ""
+spec: {}
+</pre>
+</td>
+			<td><p>set up a vmauth as the global read entrypoint</p>
+</td>
+		</tr>
+	</tbody>
+</table>
 
