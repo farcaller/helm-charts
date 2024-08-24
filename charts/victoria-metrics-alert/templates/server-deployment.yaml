@@ -36,7 +36,7 @@ spec:
     spec:
       serviceAccountName: {{ template "vmalert.serviceAccountName" . }}
       {{- if $app.podSecurityContext.enabled }}
-      securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" $app.podSecurityContext "context" .) | nindent 8 }}
+      securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" $app.podSecurityContext "context" .) | nindent 8 }}
       {{- end }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountToken }}
       {{- with ($app.imagePullSecrets | default .Values.global.imagePullSecrets) }}
@@ -45,7 +45,7 @@ spec:
       containers:
         - name: vmalert
           {{- if $app.securityContext.enabled }}
-          securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
+          securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
           {{- end }}
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" $app)) }}
           args:
@@ -113,7 +113,7 @@ spec:
             - -{{ $key }}={{ $value }}
             {{- end }}
             {{- end }}
-            {{- with (include "vmalert.license.flag" .) }}
+            {{- with (include "vm.license.flag" .) }}
             - {{ . }}
             {{- end }}
           imagePullPolicy: {{ $app.image.pullPolicy }}
@@ -151,7 +151,7 @@ spec:
             {{- with $app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- include "vmalert.license.mount" . | nindent 12 }}
+          {{- include "vm.license.mount" . | nindent 12 }}
           {{- with $app.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -182,5 +182,5 @@ spec:
         {{- with $app.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- include "vmalert.license.volume" . | nindent 8 }}
+        {{- include "vm.license.volume" . | nindent 8 }}
 {{- end }}

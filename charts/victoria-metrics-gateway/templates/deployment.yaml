@@ -45,7 +45,7 @@ spec:
     spec:
       serviceAccountName: {{ include "chart.serviceAccountName" . }}
       {{- if .Values.podSecurityContext.enabled }}
-      securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.podSecurityContext "context" .) | nindent 8 }}
+      securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" .Values.podSecurityContext "context" .) | nindent 8 }}
       {{- end }}
       {{- with (.Values.imagePullSecrets | default .Values.global.imagePullSecrets) }}
       imagePullSecrets: {{ toYaml . | nindent 8 }}
@@ -53,7 +53,7 @@ spec:
       containers:
         - name: vmgateway
           {{- if .Values.securityContext.enabled }}
-          securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.securityContext "context" .) | nindent 12 }}
+          securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" .Values.securityContext "context" .) | nindent 12 }}
           {{- end }}
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" .Values)) }}
           workingDir: {{ .Values.containerWorkingDir }}
@@ -77,7 +77,7 @@ spec:
             - -{{ $key }}={{ $value }}
             {{- end }}
             {{- end }}
-            {{- with (include "chart.license.flag" .) }}
+            {{- with (include "vm.license.flag" .) }}
             - {{ . }}
             {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -115,7 +115,7 @@ spec:
               readOnly: {{ . }}
               {{- end }}
             {{- end }}
-            {{- include "chart.license.mount" . | nindent 12 }}
+            {{- include "vm.license.mount" . | nindent 12 }}
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -150,5 +150,5 @@ spec:
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- include "chart.license.volume" . | nindent 8 }}
+        {{- include "vm.license.volume" . | nindent 8 }}
       {{- end }}

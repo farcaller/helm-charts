@@ -28,7 +28,7 @@ spec:
     spec:
       serviceAccountName: {{ include "chart.serviceAccountName" . }}
       {{- if .Values.podSecurityContext.enabled }}
-      securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.podSecurityContext "context" .) | nindent 8 }}
+      securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" .Values.podSecurityContext "context" .) | nindent 8 }}
       {{- end }}
       {{- with .Values.initContainers }}
       initContainers: {{ toYaml . | nindent 8 }}
@@ -39,7 +39,7 @@ spec:
       containers:
         - name: vmagent
           {{- if .Values.securityContext.enabled }}
-          securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.securityContext "context" .) | nindent 12 }}
+          securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" .Values.securityContext "context" .) | nindent 12 }}
           {{- end }}
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" .Values)) }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -62,7 +62,7 @@ spec:
             - -{{ $key }}={{ $value }}
             {{- end }}
             {{- end }}
-            {{- with (include "chart.license.flag" .) }}
+            {{- with (include "vm.license.flag" .) }}
             - {{ . }}
             {{- end }}
           ports:
@@ -71,31 +71,31 @@ spec:
             {{- with .Values.extraArgs.graphiteListenAddr }}
             - name: graphite-tcp
               protocol: TCP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             - name: graphite-udp
               protocol: UDP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             {{- end }}
             {{- with .Values.extraArgs.influxListenAddr }}
             - name: influx-tcp
               protocol: TCP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             - name: influx-udp
               protocol: UDP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             {{- end }}
             {{- with .Values.extraArgs.opentsdbHTTPListenAddr }}
             - name: opentsdbhttp
               protocol: TCP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             {{- end }}
             {{- with .Values.extraArgs.opentsdbListenAddr }}
             - name: opentsdb-tcp
               protocol: TCP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             - name: opentsdb-udp
               protocol: UDP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             {{- end }}
           {{- with .Values.envFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
@@ -130,7 +130,7 @@ spec:
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- include "chart.license.mount" . | nindent 12 }}
+            {{- include "vm.license.mount" . | nindent 12 }}
           {{- with .Values.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
@@ -175,7 +175,7 @@ spec:
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- include "chart.license.volume" . | nindent 8 }}
+        {{- include "vm.license.volume" . | nindent 8 }}
       {{- with .Values.priorityClassName }}
       priorityClassName: {{ . }}
       {{- end }}

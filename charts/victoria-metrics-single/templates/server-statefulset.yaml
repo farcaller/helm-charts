@@ -33,8 +33,49 @@ spec:
       schedulerName: {{ . }}
       {{- end }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountToken }}
-      {{- if eq (include "victoria-metrics.hasInitContainer" . ) "true" }}
-      initContainers: {{ include "victoria-metrics.initContiners" . | nindent 8 }}
+      {{- if or $app.initContainers $app.vmbackupmanager.restore.onStart.enabled }}
+      initContainers:
+      {{- with $app.initContainers -}}
+      {{- toYaml . | nindent 6 }}
+      {{- end -}}
+      {{- if $app.vmbackupmanager.restore.onStart.enabled }}
+      - name: vmbackupmanager-restore
+        image: {{ include "vm.image" (merge (deepCopy .) (dict "app" $app.vmbackupmanager)) }}
+        imagePullPolicy: {{ $app.image.pullPolicy }}
+        {{- with $app.podSecurityContext }}
+        securityContext:  {{ toYaml . | nindent 10 }}
+        {{- end }}
+        args:
+        - restore
+        - --eula={{ $app.vmbackupmanager.eula }}
+        - --storageDataPath={{ $app.persistentVolume.mountPath }}
+        {{- range $key, $value := $app.vmbackupmanager.extraArgs }}
+        - --{{ $key }}={{ $value }}
+        {{- end }}
+        {{- with $app.vmbackupmanager.resources }}
+        resources: {{ toYaml . | nindent 10 }}
+        {{- end }}
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        {{- with $app.vmbackupmanager.env }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        ports:
+        - name: manager-http
+          containerPort: 8300
+        volumeMounts:
+        - name: vmstorage-volume
+          mountPath: {{ $app.persistentVolume.mountPath }}
+          subPath: {{ $app.persistentVolume.subPath }}
+        {{- range $app.vmbackupmanager.extraSecretMounts }}
+        - name: {{ .name }}
+          mountPath: {{ .mountPath }}
+          subPath: {{ .subPath }}
+        {{- end }}
+      {{- end }}
       {{- end }}
       {{- with ($app.imagePullSecrets | default .Values.global.imagePullSecrets) }}
       imagePullSecrets: {{ toYaml . | nindent 8 }}
@@ -42,7 +83,7 @@ spec:
       containers:
         - name: vmsingle
           {{- if $app.securityContext.enabled }}
-          securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
+          securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
           {{- end }}
           image: {{ include "vm.image" (merge (deepCopy $global) (dict "app" $app)) }}
           imagePullPolicy: {{ $app.image.pullPolicy }}
@@ -67,7 +108,7 @@ spec:
             - --{{ $key }}={{ $value }}
             {{- end }}
             {{- end }}
-            {{- with (include "victoria-metrics.license.flag" .) }}
+            {{- with (include "vm.license.flag" .) }}
             - {{ . }}
             {{- end }}
           {{- with $app.envFrom }}
@@ -82,31 +123,31 @@ spec:
             {{- with $app.extraArgs.graphiteListenAddr }}
             - name: graphite-tcp
               protocol: TCP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             - name: graphite-udp
               protocol: UDP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             {{- end }}
             {{- with $app.extraArgs.influxListenAddr }}
             - name: influx-tcp
               protocol: TCP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             - name: influx-udp
               protocol: UDP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             {{- end }}
             {{- with $app.extraArgs.opentsdbHTTPListenAddr }}
             - name: opentsdbhttp
               protocol: TCP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             {{- end }}
             {{- with $app.extraArgs.opentsdbListenAddr }}
             - name: opentsdb-tcp
               protocol: TCP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             - name: opentsdb-udp
               protocol: UDP
-              containerPort: {{ include "split-host-port" . }}
+              containerPort: {{ include "vm.port.from.flag" (dict "flag" .) }}
             {{- end }}
           {{- with (fromYaml (include "vm.probe" (dict "app" $app "type" "readiness"))) }}
           readinessProbe: {{ toYaml . | nindent 12 }}
@@ -166,7 +207,7 @@ spec:
               readOnly: {{ . }}
               {{- end }}
             {{- end }}
-            {{- include "victoria-metrics.license.mount" . | nindent 12 }}
+            {{- include "vm.license.mount" . | nindent 12 }}
             {{- with $app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -192,7 +233,7 @@ spec:
             {{- range $key, $value := $manager.extraArgs }}
             - --{{ $key }}={{ $value }}
             {{- end }}
-            {{- with (include "victoria-metrics.license.flag" .) }}
+            {{- with (include "vm.license.flag" .) }}
             - {{ . }}
             {{- end }}
           {{- with (fromYaml (include "vm.probe" (dict "app" $manager "type" "readiness"))) }}
@@ -208,7 +249,7 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
           {{- if $app.securityContext.enabled }}
-          securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
+          securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" $app.securityContext "context" .) | nindent 12 }}
           {{- end }}
           {{- with $manager.env }}
           env: {{ toYaml . | nindent 12 }}
@@ -227,7 +268,7 @@ spec:
             {{- with $manager.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-            {{- include "victoria-metrics.license.mount" . | nindent 12 }}
+            {{- include "vm.license.mount" . | nindent 12 }}
         {{- end }}
       {{- with $app.extraContainers }}
       {{- toYaml . | nindent 8 }}
@@ -236,7 +277,7 @@ spec:
       nodeSelector: {{ toYaml . | nindent 8 }}
       {{- end }}
       {{- if $app.podSecurityContext.enabled }}
-      securityContext: {{ include "common.compatibility.renderSecurityContext" (dict "secContext" $app.podSecurityContext "context" .) | nindent 8 }}
+      securityContext: {{ include "vm.compatibility.renderSecurityContext" (dict "secContext" $app.podSecurityContext "context" .) | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ template "victoria-metrics.serviceAccountName" . }}
       {{- with $app.tolerations }}
@@ -267,7 +308,7 @@ spec:
         {{- with $app.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- include "victoria-metrics.license.volume" . | nindent 8 }}
+        {{- include "vm.license.volume" . | nindent 8 }}
   {{- if and $app.persistentVolume.enabled (not $app.persistentVolume.existingClaim) }}
   volumeClaimTemplates:
     - apiVersion: v1

@@ -1,4 +1,5 @@
 global:
+  clusterLabel: cluster
   license:
     key: ""
     keyRef: {}

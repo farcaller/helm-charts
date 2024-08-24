@@ -201,99 +201,6 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- toYaml $args -}}
 {{- end -}}
 
-{{- define "split-host-port" -}}
-{{- $hp := split ":" . -}}
-{{- printf "%s" $hp._1 -}}
-{{- end -}}
-
-{{- define "victoria-metrics.storage.hasInitContainer" -}}
-    {{- or (gt (len .Values.vmstorage.initContainers) 0)  .Values.vmstorage.vmbackupmanager.restore.onStart.enabled -}}
-{{- end -}}
-
-{{- define "victoria-metrics.storage.initContiners" -}}
-{{- if eq (include "victoria-metrics.storage.hasInitContainer" . ) "true" -}}
-{{- with .Values.vmstorage.initContainers -}}
-{{ toYaml . }}
-{{- end -}}
-{{- if .Values.vmstorage.vmbackupmanager.restore.onStart.enabled }}
-- name: vmbackupmanager-restore
-  image: {{ include "vm.image" (merge (deepCopy .) (dict "app" .Values.server.vmbackupmanager)) }}
-  imagePullPolicy: {{ .Values.vmstorage.image.pullPolicy }}
-  {{- with .Values.vmstorage.podSecurityContext }}
-  securityContext:  {{ toYaml . | nindent 4 }}
-  {{- end }}
-  args:
-    - restore
-    - --eula={{ .Values.vmstorage.vmbackupmanager.eula }}
-    - --storageDataPath={{ .Values.vmstorage.persistentVolume.mountPath }}
-    {{- range $key, $value := .Values.vmstorage.vmbackupmanager.extraArgs }}
-    - --{{ $key }}={{ $value }}
-    {{- end }}
-  {{- with .Values.vmstorage.vmbackupmanager.resources }}
-  resources: {{ toYaml . | nindent 4 }}
-  {{- end }}
-  env:
-    - name: POD_NAME
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.name
-  {{- with .Values.vmstorage.vmbackupmanager.env }}
-  {{- toYaml . | nindent 4 }}
-  {{- end }}
-  ports:
-    - name: manager-http
-      containerPort: 8300
-  volumeMounts:
-    - name: vmstorage-volume
-      mountPath: {{ .Values.vmstorage.persistentVolume.mountPath }}
-      subPath: {{ .Values.vmstorage.persistentVolume.subPath }}
-    {{- range .Values.vmstorage.vmbackupmanager.extraSecretMounts }}
-    - name: {{ .name }}
-      mountPath: {{ .mountPath }}
-      subPath: {{ .subPath }}
-    {{- end }}
-{{- end }}
-{{- else -}}
-[]
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return license flag if necessary.
-*/}}
-{{- define "chart.license.flag" -}}
-{{- if .Values.license.key -}}
---license={{ .Values.license.key }}
-{{- end }}
-{{- if and .Values.license.secret.name .Values.license.secret.key -}}
-{{- $value := printf "/etc/vm-license-key/%s" .Values.license.secret.key -}}
---licenseFile={{ $value }}
-{{- end -}}
-{{- end -}}
-
-
-{{/*
-Return license volume mount
-*/}}
-{{- define "chart.license.volume" -}}
-{{- if and .Values.license.secret.name .Values.license.secret.key -}}
-- name: license-key
-  secret:
-    secretName: {{ .Values.license.secret.name }}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return license volume mount for container
-*/}}
-{{- define "chart.license.mount" -}}
-{{- if and .Values.license.secret.name .Values.license.secret.key -}}
-- name: license-key
-  mountPath: /etc/vm-license-key
-  readOnly: true
-{{- end -}}
-{{- end -}}
-
 {{/*
 Enforce license for vmbackupmanager
 */}}
@@ -301,41 +208,8 @@ Enforce license for vmbackupmanager
 {{ if and .Values.vmstorage.vmbackupmanager.enable (not (or .Values.vmstorage.vmbackupmanager.eula .Values.license.key .Values.license.secret.name)) }}
 {{ fail `Pass -eula command-line flag or valid license at .Values.license if you have an enterprise license for running this software.
   See https://victoriametrics.com/legal/esa/ for details.
-  Documentation - https://docs.victoriametrics.com/enterprise.html
+  Documentation - https://docs.victoriametrics.com/enterprise
   for more information, visit https://victoriametrics.com/products/enterprise/
   To request a trial license, go to https://victoriametrics.com/products/enterprise/trial/`}}
 {{- end -}}
-{{- end -}}
-
-{{/* 
-Return true if the detected platform is Openshift
-Usage:
-{{- include "common.compatibility.isOpenshift" . -}}
-*/}}
-{{- define "common.compatibility.isOpenshift" -}}
-{{- if .Capabilities.APIVersions.Has "security.openshift.io/v1" -}}
-{{- true -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Render a compatible securityContext depending on the platform. By default it is maintained as it is. In other platforms like Openshift we remove default user/group values that do not work out of the box with the restricted-v1 SCC
-Usage:
-{{ include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.containerSecurityContext "context" $) }}
-*/}}
-{{- define "common.compatibility.renderSecurityContext" -}}
-{{- $adaptedContext := .secContext -}}
-{{- if .context.Values.global.compatibility -}}
-  {{- if .context.Values.global.compatibility.openshift -}}
-    {{- if or (eq .context.Values.global.compatibility.openshift.adaptSecurityContext "force") (and (eq .context.Values.global.compatibility.openshift.adaptSecurityContext "auto") (include "common.compatibility.isOpenshift" .context)) -}}
-      {{- /* Remove incompatible user/group values that do not work in Openshift out of the box */ -}}
-      {{- $adaptedContext = omit $adaptedContext "fsGroup" "runAsUser" "runAsGroup" -}}
-      {{- if not .secContext.seLinuxOptions -}}
-      {{- /* If it is an empty object, we remove it from the resulting context because it causes validation issues */ -}}
-      {{- $adaptedContext = omit $adaptedContext "seLinuxOptions" -}}
-      {{- end -}}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
-{{- omit $adaptedContext "enabled" | toYaml -}}
 {{- end -}}
