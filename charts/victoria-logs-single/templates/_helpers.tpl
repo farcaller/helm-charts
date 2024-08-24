@@ -81,3 +81,12 @@ and .Chart.Name will be "fluent-bit" in sub-chart context.
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "vlogs.args" -}}
+  {{- $args := default dict -}}
+  {{- $_ := set $args "retentionPeriod" .Values.server.retentionPeriod -}}
+  {{- $_ := set $args "storageDataPath" .Values.server.persistentVolume.mountPath -}}
+  {{- $args = mergeOverwrite $args (fromYaml (include "vm.license.flag" .)) -}}
+  {{- $args = mergeOverwrite $args .Values.server.extraArgs -}}
+  {{- include "vm.args" $args -}}
+{{- end -}}

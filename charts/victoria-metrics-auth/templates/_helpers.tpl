@@ -64,3 +64,11 @@ Create the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{- define "vmauth.args" -}}
+  {{- $args := default dict -}}
+  {{- $_ := set $args "auth.config" "/config/auth.yml" -}}
+  {{- $args = mergeOverwrite $args (fromYaml (include "vm.license.flag" .)) -}}
+  {{- $args = mergeOverwrite $args .Values.extraArgs -}}
+  {{- include "vm.args" $args -}}
+{{- end -}}

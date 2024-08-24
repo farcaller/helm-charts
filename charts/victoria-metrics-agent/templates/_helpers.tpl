@@ -75,3 +75,19 @@ Defines the name of configuration map
 {{- include "chart.fullname" . -}}-config
 {{- end -}}
 {{- end -}}
+
+{{- define "vmagent.args" -}}
+  {{- $args := default dict -}}
+  {{- $_ := set $args "promscrape.config" "/config/scrape.yml" -}}
+  {{- $_ := set $args "remoteWrite.tmpDataPath" "/tmpData" -}}
+  {{- $_ := set $args "remoteWrite.url" .Values.remoteWriteUrls -}}
+  {{- $_ := set $args "remoteWrite.multitenantURL" .Values.multiTenantUrls -}}
+  {{- $args = mergeOverwrite $args (fromYaml (include "vm.license.flag" .)) -}}
+  {{- $args = mergeOverwrite $args .Values.extraArgs -}}
+  {{- if and .Values.statefulset.enabled .Values.statefulset.clusterMode }}
+    {{- $_ := set $args "promscrape.cluster.membersCount" .Values.replicaCount -}}
+    {{- $_ := set $args "promscrape.cluster.replicationFactor" .Values.statefulset.replicationFactor -}}
+    {{- $_ := set $args "promscrape.cluster.memberNum" "$(POD_NAME)" -}}
+  {{- end -}}
+  {{- include "vm.args" $args -}}
+{{- end -}}
