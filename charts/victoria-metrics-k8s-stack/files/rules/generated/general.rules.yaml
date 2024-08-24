@@ -7,7 +7,7 @@ rules:
     runbook_url: '{{ .Values.defaultRules.runbookUrl }}/general/targetdown'
     summary: 'One or more targets are unreachable.'
   condition: '{{ true }}'
-  expr: 100 * (count(up == 0) BY (cluster, job, namespace, service) / count(up) BY (cluster, job, namespace, service)) > 10
+  expr: 100 * (count(up == 0) BY ({{ .Values.global.clusterLabel }}, job, namespace, service) / count(up) BY ({{ .Values.global.clusterLabel }}, job, namespace, service)) > 10
   for: 10m
   labels:
     severity: warning
@@ -48,6 +48,6 @@ rules:
     runbook_url: '{{ .Values.defaultRules.runbookUrl }}/general/infoinhibitor'
     summary: 'Info-level alert inhibition.'
   condition: '{{ true }}'
-  expr: ALERTS{severity = "info"} == 1 unless on(namespace) ALERTS{alertname != "InfoInhibitor", severity =~ "warning|critical", alertstate="firing"} == 1
+  expr: ALERTS{severity = "info"} == 1 unless on ({{ .Values.global.clusterLabel }},namespace) ALERTS{alertname != "InfoInhibitor", severity =~ "warning|critical", alertstate="firing"} == 1
   labels:
     severity: none
