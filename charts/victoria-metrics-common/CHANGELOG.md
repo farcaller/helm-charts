@@ -6,6 +6,7 @@
 - Moved `vm.compatibility.renderSecurityContext` template
 - Fixed a case, when null is passed to a `.Values.global`. See [this issue](https://github.com/VictoriaMetrics/helm-charts/issues/1296)
 - Updated `vm.probe.*` templates to remove Helm 3.14 restriction.
+- Added `vm.args` template for cmd args generation
 
 ## 0.0.2
 

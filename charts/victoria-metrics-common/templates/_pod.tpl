@@ -84,3 +84,18 @@ Net probe port
 {{- define "vm.probe.port" -}}
 {{- dig "ports" "name" "http" (.app | dict) -}}
 {{- end -}}
+
+{{- /*
+command line arguments
+*/ -}}
+{{- define "vm.args" -}}
+{{- range $key, $value := . }}
+{{- if kindIs "slice" $value }}
+{{- range $v := $value }}
+- -{{ $key }}={{ $v }}
+{{- end }}
+{{- else }}
+- -{{ $key }}={{ $value }}
+{{- end }}
+{{- end }}
+{{- end -}}
