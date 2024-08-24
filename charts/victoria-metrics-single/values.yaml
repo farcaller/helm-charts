@@ -292,7 +292,7 @@ server:
       # - name: example
       #   mountPath: /example
     # -- Allows to enable restore options for pod.
-    # Read more: https://docs.victoriametrics.com/vmbackupmanager.html#restore-commands
+    # Read more: https://docs.victoriametrics.com/vmbackupmanager#restore-commands
     restore:
       onStart:
         enabled: false
@@ -717,7 +717,7 @@ extraObjects: []
 
 # -- Enterprise license key configuration for VictoriaMetrics enterprise.
 # Required only for VictoriaMetrics enterprise.
-# Documentation - https://docs.victoriametrics.com/enterprise.html,
+# Documentation - https://docs.victoriametrics.com/enterprise,
 # for more information, visit https://victoriametrics.com/products/enterprise/ .
 # To request a trial license, go to https://victoriametrics.com/products/enterprise/trial/
 # Supported starting from VictoriaMetrics v1.94.0
