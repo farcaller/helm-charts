@@ -86,18 +86,14 @@ vmselect:
   probe:
     # Readiness probe
     readiness:
-      httpGet:
-        path: '{{ include "vm.probe.http.path" . }}'
-        scheme: '{{ include "vm.probe.http.scheme" . }}'
-        port: '{{ include "vm.probe.port" . }}'
+      httpGet: {}
       initialDelaySeconds: 5
       periodSeconds: 15
       timeoutSeconds: 5
       failureThreshold: 3
     # Liveness probe
     liveness:
-      tcpSocket:
-        port: '{{ include "vm.probe.port" . }}'
+      tcpSocket: {}
       initialDelaySeconds: 5
       periodSeconds: 15
       timeoutSeconds: 5
@@ -342,17 +338,13 @@ vminsert:
   # Readiness & Liveness probes
   probe:
     readiness:
-      httpGet:
-        path: '{{ index .app.extraArgs "http.pathPrefix" | default "" | trimSuffix "/" }}/health'
-        scheme: '{{ ternary "HTTPS" "HTTP" (.app.extraArgs.tls | default false) }}'
-        port: '{{ dig "ports" "name" "http" (.app | dict) }}'
+      httpGet: {}
       initialDelaySeconds: 5
       periodSeconds: 15
       timeoutSeconds: 5
       failureThreshold: 3
     liveness:
-      tcpSocket:
-        port: '{{ dig "ports" "name" "http" (.app | dict) }}'
+      tcpSocket: {}
       initialDelaySeconds: 5
       periodSeconds: 15
       timeoutSeconds: 5
@@ -699,17 +691,13 @@ vmstorage:
   terminationGracePeriodSeconds: 60
   probe:
     readiness:
-      httpGet:
-        path: '{{ include "vm.probe.http.path" . }}'
-        scheme: '{{ include "vm.probe.http.scheme" . }}'
-        port: '{{ include "vm.probe.port" . }}'
+      httpGet: {}
       initialDelaySeconds: 5
       periodSeconds: 15
       timeoutSeconds: 5
       failureThreshold: 3
     liveness:
-      tcpSocket:
-        port: '{{ include "vm.probe.port" . }}'
+      tcpSocket: {}
       initialDelaySeconds: 30
       periodSeconds: 30
       timeoutSeconds: 5
@@ -768,8 +756,6 @@ vmstorage:
     probe:
       readiness:
         httpGet:
-          path: '{{ include "vm.probe.http.path" . }}'
-          scheme: '{{ include "vm.probe.http.scheme" . }}'
           port: manager-http
         initialDelaySeconds: 5
         periodSeconds: 15

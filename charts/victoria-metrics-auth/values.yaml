@@ -253,13 +253,11 @@ extraObjects: []
 
 probe:
   readiness:
-    tcpSocket:
-      port: '{{ include "vm.probe.port" . }}'
+    tcpSocket: {}
     initialDelaySeconds: 5
     periodSeconds: 15
   liveness:
-    tcpSocket:
-      port: '{{ include "vm.probe.port" . }}'
+    tcpSocket: {}
     initialDelaySeconds: 5
     periodSeconds: 15
     timeoutSeconds: 5

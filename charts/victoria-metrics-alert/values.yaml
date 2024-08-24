@@ -66,17 +66,13 @@ server:
   # Readiness & Liveness probes
   probe:
     readiness:
-      httpGet:
-        path: '{{ include "vm.probe.http.path" . }}'
-        scheme: '{{ include "vm.probe.http.scheme" . }}'
-        port: '{{ include "vm.probe.port" . }}'
+      httpGet: {}
       initialDelaySeconds: 5
       periodSeconds: 15
       timeoutSeconds: 5
       failureThreshold: 3
     liveness:
-      tcpSocket:
-        port: '{{ include "vm.probe.port" . }}'
+      tcpSocket: {}
       initialDelaySeconds: 5
       periodSeconds: 15
       timeoutSeconds: 5
