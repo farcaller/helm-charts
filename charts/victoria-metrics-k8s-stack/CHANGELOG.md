@@ -5,6 +5,9 @@
 - kube-state-metrics - 5.16.4 -> 5.25.1
 - prometheus-node-exporter - 4.27.0 -> 4.29.0
 - grafana - 8.3.8 -> 8.4.7
+- allow extra `vmalert.notifiers` without dropping default notifier if `alertmanager.enabled: true`
+- do not drop default notifier, when vmalert.additionalNotifierConfigs is set
+- replaced static url proto with a template, which selects proto depending on a present tls configuration
 
 ## 0.25.3
 
