@@ -213,9 +213,9 @@ app.kubernetes.io/instance: {{ include "vm.release" . }}
 
 {{- /* VM Agent remoteWrites */ -}}
 {{- define "vm.agent.remote.write" -}}
-  {{- $remoteWrites := .Values.vmagent.additionalRemoteWrites -}}
+  {{- $remoteWrites := .Values.vmagent.additionalRemoteWrites | default list -}}
   {{- if or .Values.vmsingle.enabled .Values.vmcluster.enabled .Values.externalVM.write.url -}}
-    {{- $remoteWrites := append $remoteWrites (fromYaml (include "vm.write.endpoint" .)) -}}
+    {{- $remoteWrites = append $remoteWrites (fromYaml (include "vm.write.endpoint" .)) -}}
   {{- end -}}
   {{- toYaml (dict "remoteWrite" $remoteWrites) -}}
 {{- end -}}

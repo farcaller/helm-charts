@@ -16,6 +16,6 @@ metadata:
 data:
   datasource.yaml: |-
     apiVersion: 1
-    datasources: {{ toYaml . | nindent 6 }}
+    datasources: {{ . | nindent 6 }}
 {{- end }}
 {{- end }}
